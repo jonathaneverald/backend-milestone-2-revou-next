@@ -2,7 +2,7 @@ from db import db
 from sqlalchemy.orm import mapped_column, relationship
 from sqlalchemy import Integer, DateTime, ForeignKey, Enum
 from datetime import datetime, timedelta
-from enums.enum import UserRoleEnum
+from enums.enum import UserRoleEnum, RoleStatusEnum
 
 
 def gmt_plus_7_now():
@@ -16,6 +16,7 @@ class RoleModel(db.Model):
     institute_id = mapped_column(Integer, ForeignKey("institutes.id"), unique=False, nullable=False)
     user_id = mapped_column(Integer, ForeignKey("users.id"), unique=False, nullable=False)
     role = mapped_column(Enum(UserRoleEnum), default=UserRoleEnum.admin, unique=False, nullable=False)
+    status = mapped_column(Enum(RoleStatusEnum), default=RoleStatusEnum.pending, unique=False, nullable=False)
     created_at = mapped_column(DateTime, default=gmt_plus_7_now, nullable=False)
     updated_at = mapped_column(DateTime, default=gmt_plus_7_now, onupdate=gmt_plus_7_now, nullable=False)
 

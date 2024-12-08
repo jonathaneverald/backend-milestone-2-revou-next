@@ -7,6 +7,12 @@ class UserRoleEnum(Enum):
     student = 3
 
 
+class RoleStatusEnum(Enum):
+    active = 1
+    inactive = 2
+    pending = 3
+
+
 class AssesmentTypeEnum(Enum):
     essay = 1
     choices = 2
