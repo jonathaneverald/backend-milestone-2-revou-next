@@ -100,7 +100,9 @@ def update_institute(institute_id):
     s.begin()
 
     try:
+        data = request.get_json()
         user_id = get_jwt_identity()
+
         institute = s.get(InstituteModel, institute_id)
 
         validator = Validator(update_institute_schema)
@@ -113,17 +115,15 @@ def update_institute(institute_id):
             
         # Check if user is admin
         admin_role = s.query(RoleModel).filter(
-            (
                 RoleModel.institute_id == institute_id,
                 RoleModel.user_id == user_id,
                 RoleModel.role == UserRoleEnum.admin
-            )
         ).first()
         
         if not admin_role:
             return ResponseHandler.error("Unauthorized user", 403)
             
-        data = request.get_json()
+       
         institute.name = data.get("name", institute.name)
         s.commit()
         
@@ -151,15 +151,19 @@ def delete_institute(institute_id):
             
         # Check if user is admin
         admin_role = s.query(RoleModel).filter(
-            (
                 RoleModel.institute_id == institute_id,
                 RoleModel.user_id == user_id,
                 RoleModel.role == UserRoleEnum.admin
-            )
         ).first()
         
         if not admin_role:
             return ResponseHandler.error("Unauthorized user", 403)
+        
+
+        # For now, delete manually all the role instead of using cascade delete
+        roles = s.query(RoleModel).filter(RoleModel.institute_id == institute_id).all()
+        for role in roles:
+            s.delete(role)
             
         s.delete(institute)
         s.commit()

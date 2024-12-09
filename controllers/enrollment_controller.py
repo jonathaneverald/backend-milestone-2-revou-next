@@ -8,6 +8,7 @@ from sqlalchemy.orm import sessionmaker
 from enums.enum import UserRoleEnum, RoleStatusEnum, EnrollStatusEnum
 
 from utils.handle_response import ResponseHandler
+from datetime import datetime, timedelta
 
 from cerberus import Validator
 from schemas.enrollment_schema import create_enrollment_schema, update_enrollment_schema
@@ -34,11 +35,9 @@ def assign_role(institute_id):
         
         # Check if assigner is admin
         admin_role = s.query(RoleModel).filter(
-            (
                 RoleModel.institute_id == institute_id,
                 RoleModel.user_id == user_id,
                 RoleModel.role == UserRoleEnum.admin
-            )
         ).first()
         
         if not admin_role:
@@ -81,11 +80,9 @@ def update_role_status(institute_id, role_id):
         
         # Check if user is admin
         admin_role = s.query(RoleModel).filter(
-            (
                 RoleModel.institute_id == institute_id,
                 RoleModel.user_id == user_id,
                 RoleModel.role == UserRoleEnum.admin
-            )
         ).first()
         
         if not admin_role:
@@ -143,10 +140,8 @@ def create_enrollment():
         
         # Verify admin role
         admin_role = s.query(RoleModel).filter(
-            (
                 RoleModel.user_id == user_id,
                 RoleModel.role == UserRoleEnum.admin
-            )
         ).first()
         
         if not admin_role:
@@ -155,6 +150,7 @@ def create_enrollment():
         new_enrollment = EnrollmentModel(
             role_id=data["role_id"],
             course_id=data["course_id"],
+            enrolled_at=datetime.utcnow() + timedelta(hours=7),
             status=EnrollStatusEnum.pending
         )
         
@@ -225,10 +221,8 @@ def update_enrollment(enrollment_id):
         
         # Verify admin role
         admin_role = s.query(RoleModel).filter(
-            (
                 RoleModel.user_id == user_id,
                 RoleModel.role == UserRoleEnum.admin
-            )
         ).first()
         if not admin_role:
             return ResponseHandler.error("Unauthorized user", 403)
