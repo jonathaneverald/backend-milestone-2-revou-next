@@ -29,7 +29,7 @@ class EnrollmentModel(db.Model):
             "role_id": self.role_id,
             "course_id": self.course_id,
             "enrolled_at": self.enrolled_at,
-            "status": self.status,
+            "status": self.status.name,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
         }

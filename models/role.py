@@ -32,7 +32,8 @@ class RoleModel(db.Model):
             "id": self.id,
             "institute_id": self.institute_id,
             "user_id": self.user_id,
-            "role": self.role,
+            "role": self.role.name,
+            "status": self.status.name, 
             "created_at": self.created_at,
             "updated_at": self.updated_at,
         }
