@@ -1,8 +1,8 @@
-from flask import Blueprint, request
+from flask import Blueprint
 from sqlalchemy.orm import sessionmaker
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from connector.mysql_connectors import connect_db
-from models import RoleModel, EnrollmentModel, CourseModel, ModuleModel
+from models import RoleModel, EnrollmentModel, ModuleModel
 from enums.enum import RoleStatusEnum
 from utils.handle_response import ResponseHandler
 
@@ -39,6 +39,11 @@ def get_course_modules(course_id):
 
         # Fetch modules for the course
         modules = s.query(ModuleModel).filter(ModuleModel.course_id == course_id).all()
+        
+        if not modules:
+            return ResponseHandler.success(
+                {"modules": []}, "No modules found for this course."
+            )
 
         return ResponseHandler.success(
             {"modules": [module.to_dictionaries() for module in modules]},

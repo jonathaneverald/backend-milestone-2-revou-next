@@ -1,5 +1,5 @@
-from flask import Blueprint, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask import Blueprint
+from flask_jwt_extended import jwt_required
 from connector.mysql_connectors import connect_db
 from sqlalchemy.orm import sessionmaker
 from models import ModuleModel, AssessmentModel
