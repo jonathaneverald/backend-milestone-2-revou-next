@@ -24,6 +24,9 @@ from models.submission import SubmissionModel
 from controllers.auth_controller import auth_bp, revoked_tokens
 from controllers.institute_controller import institute_bp
 from controllers.enrollment_controller import enrollment_bp
+from controllers.course_controller import course_bp
+from controllers.module_controller import module_bp
+from controllers.assessment_controller import assessment_bp
 
 from utils.handle_response import ResponseHandler
 
@@ -80,6 +83,9 @@ def register_blueprints(app):
     app.register_blueprint(auth_bp)
     app.register_blueprint(institute_bp)
     app.register_blueprint(enrollment_bp)
+    app.register_blueprint(course_bp)
+    app.register_blueprint(module_bp)
+    app.register_blueprint(assessment_bp)
 
 
 if __name__ == "__main__":
