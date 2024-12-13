@@ -24,8 +24,14 @@ from models.submission import SubmissionModel
 from controllers.auth_controller import auth_bp, revoked_tokens
 from controllers.institute_controller import institute_bp
 from controllers.enrollment_controller import enrollment_bp
+from controllers.courses_controller import course_bp
+from controllers.modules_controller import module_bp
 
 from utils.handle_response import ResponseHandler
+
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
 
 def create_app():
     app = Flask(__name__)
@@ -34,6 +40,7 @@ def create_app():
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=8)
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(hours=8)
     jwt = JWTManager(app)
+    logging.debug("App created")
 
     CORS(
         app,
@@ -80,8 +87,11 @@ def register_blueprints(app):
     app.register_blueprint(auth_bp)
     app.register_blueprint(institute_bp)
     app.register_blueprint(enrollment_bp)
+    app.register_blueprint(course_bp)
+    app.register_blueprint(module_bp)
 
 
 if __name__ == "__main__":
+    logging.debug("Starting the Flask application...")
     app = create_app()
     app.run(debug=True)

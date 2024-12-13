@@ -28,7 +28,7 @@ class AssessmentModel(db.Model):
         return {
             "id": self.id,
             "module_id": self.module_id,
-            "type": self.type,
+            "type": self.type.name,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
         }

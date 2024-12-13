@@ -243,3 +243,45 @@ def update_enrollment(enrollment_id):
 
     finally:
         s.close()
+
+@enrollment_bp.route("/api/v1/enrollments/me", methods=["GET"])
+@jwt_required()
+def get_my_enrollments():
+    Session = sessionmaker(bind=connect_db())
+    s = Session()
+    s.begin()
+
+    try:
+        user_id = get_jwt_identity()
+
+        # Fetch roles associated with the current user
+        roles = s.query(RoleModel).filter(
+                    RoleModel.user_id == user_id,
+                    RoleModel.role == "student",
+                    RoleModel.status == RoleStatusEnum.active
+                ).all()
+        print(f'{roles}')
+
+        # Fetch enrollments for these roles
+        active_enrollments = s.query(EnrollmentModel).filter(
+            EnrollmentModel.role_id.in_([role.id for role in roles])
+        ).all()
+        print(f'{active_enrollments}')
+
+        if not active_enrollments:
+            return ResponseHandler.success(
+                {"enrollments": []}, "No active enrollments found"
+            )
+
+        # Return the active enrollments
+        return ResponseHandler.success(
+            {"enrollments": [enrollment.to_dictionaries() for enrollment in active_enrollments]},
+            "Active enrollments retrieved successfully",
+        )
+
+    except Exception as e:
+        s.rollback()
+        return ResponseHandler.error(str(e), 500)
+
+    finally:
+        s.close()
