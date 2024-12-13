@@ -29,9 +29,6 @@ from controllers.modules_controller import module_bp
 
 from utils.handle_response import ResponseHandler
 
-import logging
-
-logging.basicConfig(level=logging.DEBUG)
 
 def create_app():
     app = Flask(__name__)
@@ -40,7 +37,6 @@ def create_app():
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=8)
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(hours=8)
     jwt = JWTManager(app)
-    logging.debug("App created")
 
     CORS(
         app,
@@ -92,6 +88,5 @@ def register_blueprints(app):
 
 
 if __name__ == "__main__":
-    logging.debug("Starting the Flask application...")
     app = create_app()
     app.run(debug=True)
