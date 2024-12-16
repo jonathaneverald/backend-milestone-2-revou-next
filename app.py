@@ -27,6 +27,8 @@ from controllers.enrollment_controller import enrollment_bp
 from controllers.course_controller import course_bp
 from controllers.module_controller import module_bp
 from controllers.submission_controller import submission_bp
+from controllers.assessment_controller import assessment_bp
+
 
 from utils.handle_response import ResponseHandler
 
@@ -52,20 +54,14 @@ def create_app():
     def check_if_token_revoked(jwt_header, jwt_payload):
         jti = jwt_payload["jti"]
         return jti in revoked_tokens
-    
+
     @jwt.expired_token_loader
     def expired_token_callback(jwt_header, jwt_data):
-        return ResponseHandler.error(
-            "Token has expired",
-            401
-        )
+        return ResponseHandler.error("Token has expired", 401)
 
     @jwt.unauthorized_loader
     def missing_token_callback(error):
-        return ResponseHandler.error(
-            "Request doesn't contain valid token",
-            401
-        )
+        return ResponseHandler.error("Request doesn't contain valid token", 401)
 
     db.init_app(app)
     Migrate(app, db)
@@ -87,6 +83,7 @@ def register_blueprints(app):
     app.register_blueprint(course_bp)
     app.register_blueprint(module_bp)
     app.register_blueprint(submission_bp)
+    app.register_blueprint(assessment_bp)
 
 
 if __name__ == "__main__":
