@@ -267,7 +267,13 @@ def delete_course(course_id):
 
         # Check if user is instructor
         instructor_role = (
-            s.query(RoleModel).filter(RoleModel.user_id == user_id, RoleModel.role == UserRoleEnum.instructor).first()
+            s.query(RoleModel)
+            .filter(
+                RoleModel.user_id == user_id,
+                RoleModel.role == UserRoleEnum.instructor,
+                RoleModel.institute_id == course.institute_id,
+            )
+            .first()
         )
 
         if not instructor_role:
