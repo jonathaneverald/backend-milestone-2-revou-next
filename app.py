@@ -28,6 +28,7 @@ from controllers.course_controller import course_bp
 from controllers.module_controller import module_bp
 from controllers.submission_controller import submission_bp
 from controllers.assessment_controller import assessment_bp
+from dotenv import load_dotenv
 
 
 from utils.handle_response import ResponseHandler
@@ -35,6 +36,7 @@ from utils.handle_response import ResponseHandler
 
 def create_app():
     app = Flask(__name__)
+    load_dotenv()
     app.config.from_object(Config)
     app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=8)
