@@ -189,8 +189,9 @@ def update_course(course_id):
     s.begin()
 
     try:
-        data = request.get_json()
+        data = request.form.to_dict()
         user_id = get_jwt_identity()
+        media = request.files.get("media")
 
         course = s.get(CourseModel, course_id)
 
@@ -204,7 +205,13 @@ def update_course(course_id):
 
         # Check if user is instructor
         instructor_role = (
-            s.query(RoleModel).filter(RoleModel.user_id == user_id, RoleModel.role == UserRoleEnum.instructor).first()
+            s.query(RoleModel)
+            .filter(
+                RoleModel.user_id == user_id,
+                RoleModel.role == UserRoleEnum.instructor,
+                RoleModel.institute_id == course.institute_id,
+            )
+            .first()
         )
 
         if not instructor_role:
@@ -222,9 +229,15 @@ def update_course(course_id):
         if "category" in data:
             course.category = data["category"]
 
-        # Update course media
-        if "media" in data:
-            course.media = data["media"]
+        # Handle media files upload if provided
+        if media and isinstance(media, FileStorage):
+            upload_files = UploadFiles()
+            result = upload_files.process_single_file(media)
+
+            if "error" in result:
+                return ResponseHandler.error(f"Media upload failed: {result['error']}", 400)
+
+            course.media = result["file_url"]
 
         s.commit()
 

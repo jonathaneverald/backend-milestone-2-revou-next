@@ -8,8 +8,8 @@ create_course_schema = {
 }
 
 update_course_schema = {
-    "title": {"type": "string", "required": True, "minlength": 3, "maxlength": 255},
-    "description": {"type": "string", "required": True, "minlength": 3, "maxlength": 255},
-    "category": {"type": "string", "required": True, "minlength": 3, "maxlength": 255},
-    "media": {"type": "string", "required": True, "minlength": 3, "maxlength": 255},
+    "title": {"type": "string", "required": False, "minlength": 3, "maxlength": 255},
+    "description": {"type": "string", "required": False, "minlength": 3, "maxlength": 255},
+    "category": {"type": "string", "required": False, "minlength": 3, "maxlength": 255},
+    "media": {"type": "string", "required": False, "minlength": 3, "maxlength": 255},
 }
