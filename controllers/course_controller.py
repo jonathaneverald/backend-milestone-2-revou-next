@@ -9,6 +9,8 @@ from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from cerberus import Validator
 from schemas.course_schema import create_course_schema, update_course_schema
+from services.upload import UploadFiles
+from werkzeug.datastructures import FileStorage
 
 course_bp = Blueprint("course", __name__)
 
@@ -67,8 +69,11 @@ def create_course():
     s.begin()
 
     try:
-        data = request.get_json()
+        data = request.form.to_dict()
         user_id = get_jwt_identity()
+        media = request.files.get("media")
+        data["role_id"] = int(data["role_id"])
+        data["institute_id"] = int(data["institute_id"])
 
         validator = Validator(create_course_schema)
 
@@ -83,6 +88,17 @@ def create_course():
         if not instructor_role:
             return ResponseHandler.error("Unauthorized user", 403)
 
+        # Handle media files upload if provided
+        media_url = None
+        if media and isinstance(media, FileStorage):
+            upload_files = UploadFiles()
+            result = upload_files.process_single_file(media)
+
+            if "error" in result:
+                return ResponseHandler.error(f"Media upload failed: {result['error']}", 400)
+
+            media_url = result["file_url"]
+
         # Create new course
         new_course = CourseModel(
             institute_id=data["institute_id"],
@@ -90,7 +106,7 @@ def create_course():
             title=data["title"],
             description=data["description"],
             category=data["category"],
-            media=data["media"],
+            media=media_url,
         )
         s.add(new_course)
         s.commit()
