@@ -30,7 +30,7 @@ class UploadService:
 
 
 class UploadFiles:
-    ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "mp4"}  # Extension limit
+    ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "mp4", "pdf"}  # Extension limit
     MAX_FILE_SIZE = 10 * 1024 * 1024  # File size limit
 
     def allowed_file(self, filename: str) -> bool:
