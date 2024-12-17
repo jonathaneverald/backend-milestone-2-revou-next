@@ -139,7 +139,7 @@ def get_all_courses():
         if not instructor_role:
             return ResponseHandler.error("Unauthorized user", 403)
 
-        courses = s.query(CourseModel).filter(CourseModel.institute_id).all()
+        courses = s.query(CourseModel).filter(CourseModel.institute_id == instructor_role.institute_id).all()
         return ResponseHandler.success(
             {"Courses": [course.to_dictionaries() for course in courses]}, "Courses retrieved successfully"
         )
@@ -267,6 +267,36 @@ def delete_course(course_id):
 
     except Exception as e:
         s.rollback()
+        return ResponseHandler.error(str(e), 500)
+
+    finally:
+        s.close()
+
+
+@course_bp.route("/api/v1/institute-courses/<int:institute_id>", methods=["GET"])
+@jwt_required()
+def show_all_courses(institute_id):
+    Session = sessionmaker(bind=connect_db())
+    s = Session()
+    s.begin()
+
+    try:
+        user_id = get_jwt_identity()
+
+        # # Check if user is instructor
+        # instructor_role = (
+        #     s.query(RoleModel).filter(RoleModel.user_id == user_id, RoleModel.role == UserRoleEnum.instructor).first()
+        # )
+
+        # if not instructor_role:
+        #     return ResponseHandler.error("Unauthorized user", 403)
+
+        courses = s.query(CourseModel).filter(CourseModel.institute_id == institute_id).all()
+        return ResponseHandler.success(
+            {"Courses": [course.to_dictionaries() for course in courses]}, "Courses retrieved successfully"
+        )
+
+    except Exception as e:
         return ResponseHandler.error(str(e), 500)
 
     finally:
