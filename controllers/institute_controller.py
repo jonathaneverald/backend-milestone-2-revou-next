@@ -60,7 +60,16 @@ def get_all_institutes():
     s.begin()
 
     try:
-        institutes = s.query(InstituteModel).all()
+        user_id = get_jwt_identity()
+        institutes = (
+            s.query(InstituteModel)
+            .filter(
+                RoleModel.user_id == user_id,
+                InstituteModel.id == RoleModel.institute_id,
+                RoleModel.role == UserRoleEnum.admin,
+            )
+            .all()
+        )
         return ResponseHandler.success(
             {"institutes": [institute.to_dictionaries() for institute in institutes]},
             "Institutes retrieved successfully",
@@ -80,9 +89,20 @@ def get_institute_by_id(institute_id):
     s.begin()
 
     try:
-        institute = s.get(InstituteModel, institute_id)
+        user_id = get_jwt_identity()
+        institute = (
+            s.query(InstituteModel)
+            .join(RoleModel)
+            .filter(
+                RoleModel.user_id == user_id,
+                InstituteModel.id == institute_id,
+                RoleModel.role == UserRoleEnum.admin,
+            )
+            .first()
+        )
+        print(institute)
         if not institute:
-            return ResponseHandler.error("Institute not found", 404)
+            return ResponseHandler.error("Institute not found or belongs to other user", 404)
 
         return ResponseHandler.success(institute.to_dictionaries(), "Institute retrieved successfully")
     except Exception as e:
