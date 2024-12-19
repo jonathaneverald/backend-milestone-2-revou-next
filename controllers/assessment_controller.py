@@ -1,6 +1,10 @@
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
+from services.upload import UploadFiles
+from werkzeug.datastructures import FileStorage
+import json
+
 from models import AssessmentModel, RoleModel, SubmissionModel, AssessmentDetailModel
 from connector.mysql_connectors import connect_db
 from sqlalchemy.orm import sessionmaker
@@ -246,8 +250,26 @@ def submit_assessment(assessment_id):
     s.begin()
 
     try:
-        data = request.get_json()
         user_id = get_jwt_identity()
+        data = request.form.to_dict()  # Change to form data to handle file upload
+        submission_file = request.files.get('file')
+        
+        # Handle file upload if provided
+        file_url = None
+        if submission_file and isinstance(submission_file, FileStorage):
+            upload_files = UploadFiles()
+            result = upload_files.process_single_file(submission_file)
+            
+            if "error" in result:
+                return ResponseHandler.error(f"File upload failed: {result['error']}", 400)
+            
+            file_url = result["file_url"]
+
+        # Check answer if is a valid JSON
+        try:
+            answer = json.loads(data.get("answer", "{}")) if "answer" in data else {}
+        except json.JSONDecodeError:
+            return ResponseHandler.error("Invalid answer format: Must be valid JSON", 400)
 
         # Validate the input payload
         validator = Validator(create_submission_schema)
@@ -294,12 +316,20 @@ def submit_assessment(assessment_id):
                 return ResponseHandler.error("Assessment detail not found", 404)
 
             correct_answers = assessment_detail.answer
-            user_answers = data.get("answer", {})
+            user_answers = answer
             correct_answers_count = 0
             total_questions = len(assessment_detail.question) 
 
             for question_number, options in assessment_detail.question.items():
-                if user_answers.get(question_number) == correct_answers.get(question_number):
+                # Validate that question exists in both answers
+                if question_number not in correct_answers:
+                    return ResponseHandler.error(f"Question {question_number} not found in answer key", 500)
+        
+                if question_number not in user_answers:
+                    continue  # Skip unanswered questions, counting them as incorrect
+            
+                # Compare answers only if both exist
+                if user_answers[question_number] == correct_answers[question_number]:
                     correct_answers_count += 1
 
             score = (correct_answers_count / total_questions) * 100
@@ -309,7 +339,7 @@ def submit_assessment(assessment_id):
         submission = SubmissionModel(
             assessment_id=assessment_id,
             role_id=role.id,
-            file=data.get("file"),
+            file=file_url,
             score=score,
             answer=user_answers
         )
