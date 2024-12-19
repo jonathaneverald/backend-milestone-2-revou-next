@@ -28,6 +28,15 @@ def assign_role(institute_id):
         user_id = get_jwt_identity()
         data = request.get_json()
 
+        existing_role = s.query(RoleModel).filter(
+            RoleModel.institute_id == institute_id,
+            RoleModel.user_id == data["user_id"],
+            RoleModel.role == UserRoleEnum[data["role"]]
+        ).first()
+
+        if existing_role:
+            return ResponseHandler.error("User already has this role in this institute", 400)
+
         validator = Validator(create_role_schema)
 
         if not validator.validate(data):

@@ -5,7 +5,7 @@ import json
 
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, get_jwt
 
-from models import UserModel, DisabledUserModel
+from models import UserModel, DisabledUserModel, InstituteModel, RoleModel
 from connector.mysql_connectors import connect_db
 from sqlalchemy.orm import sessionmaker
 
@@ -93,10 +93,28 @@ def login():
         if not user or not user.check_password(data["password"]):
             return ResponseHandler.error("Email or password is incorrect", 401)
         
+        # Query user's roles and institutes
+        roles_with_institutes = (
+            s.query(RoleModel, InstituteModel)
+            .join(InstituteModel)
+            .filter(RoleModel.user_id == user.id)
+            .all()
+        )
+
+        roles_data = []
+        for role, institute in roles_with_institutes:
+            roles_data.append({
+                "role": role.role.name,
+                "role_id" : role.id,
+                "institute_id" : institute.id,
+                "institute_name": institute.name
+            })
+        
         access_token = create_access_token(identity=str(user.id))
         return ResponseHandler.success({
             "token": access_token,
-            "user": user.to_dictionaries()
+            "user": user.to_dictionaries(),
+            "roles": roles_data
         }, "Login successful")
         
     except Exception as e:
@@ -104,6 +122,7 @@ def login():
     
     finally:
         s.close()
+
 
 @auth_bp.route("/api/v1/users/profile", methods=["GET"])
 @jwt_required()
