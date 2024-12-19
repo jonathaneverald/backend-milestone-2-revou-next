@@ -15,7 +15,7 @@ from werkzeug.datastructures import FileStorage
 course_bp = Blueprint("course", __name__)
 
 
-@course_bp.route("/api/v1/courses/<int:course_id>/modules", methods=["GET"])
+@course_bp.route("/api/v1/student-courses/<int:course_id>/modules", methods=["GET"])
 @jwt_required()
 def get_course_modules(course_id):
     Session = sessionmaker(bind=connect_db())
