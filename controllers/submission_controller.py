@@ -3,7 +3,7 @@ from sqlalchemy.orm import sessionmaker
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from connector.mysql_connectors import connect_db
 from models import RoleModel, SubmissionModel
-from enums.enum import RoleStatusEnum
+from enums.enum import RoleStatusEnum, UserRoleEnum
 from utils.handle_response import ResponseHandler
 
 submission_bp = Blueprint("submission", __name__)
@@ -21,7 +21,7 @@ def get_my_submmissions():
         # Fetch roles associated with the current user
         roles = s.query(RoleModel).filter(
                     RoleModel.user_id == user_id,
-                    RoleModel.role == "student",
+                    RoleModel.role == UserRoleEnum.student,
                     RoleModel.status == RoleStatusEnum.active
                 ).all()
 
