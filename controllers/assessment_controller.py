@@ -13,6 +13,8 @@ from cerberus import Validator
 from schemas.assessment_schema import create_assessment_schema, update_assessment_schema
 from schemas.submission_schema import create_submission_schema, update_submission_schema
 
+from datetime import datetime
+
 assessment_bp = Blueprint("assessment", __name__)
 
 @assessment_bp.route("/api/v1/assessments", methods=["POST"])
@@ -58,15 +60,15 @@ def create_assessment():
     finally:
         s.close()
 
-@assessment_bp.route("/api/v1/assessments", methods=["GET"])
+@assessment_bp.route("/api/v1/<int:module_id>/assessments", methods=["GET"])
 @jwt_required()
-def get_all_assessments():
+def get_all_assessments_in_module(module_id):
     Session = sessionmaker(bind=connect_db())
     s = Session()
     s.begin()
 
     try:
-        assessments = s.query(AssessmentModel).filter(AssessmentModel.module_id).all()
+        assessments = s.query(AssessmentModel).filter(AssessmentModel.module_id == module_id).all()
         return ResponseHandler.success(
             {"assessments": [assessment.to_dictionaries() for assessment in assessments]},
             "Assessments retrieved successfully"
@@ -275,8 +277,12 @@ def submit_assessment(assessment_id):
             assessment_id=assessment_id, role_id=role.id
         ).first()
         if existing_submission:
-            return ResponseHandler.error("You have already submitted for this assessment", 400) 
-
+            return ResponseHandler.error("You have already submitted for this assessment", 400)
+        
+        # Check if the deadline has passed
+        assessment_detail = s.query(AssessmentDetailModel).filter_by(assessment_id=assessment_id).first()
+        if assessment_detail and datetime.utcnow() > assessment_detail.deadline:    
+            return ResponseHandler.error("Submission deadline has passed", 400)
 
         # calculate score for multiple choice assessment
         if assessment.type == AssesmentTypeEnum.choices:
