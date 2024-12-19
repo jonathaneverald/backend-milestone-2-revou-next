@@ -1,16 +1,19 @@
 from flask import Blueprint, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
-from models import AssessmentModel, RoleModel, SubmissionModel
+from models import AssessmentModel, RoleModel, SubmissionModel, AssessmentDetailModel
 from connector.mysql_connectors import connect_db
 from sqlalchemy.orm import sessionmaker
 
-from enums.enum import UserRoleEnum, AssesmentTypeEnum
+from enums.enum import UserRoleEnum, AssesmentTypeEnum, RoleStatusEnum
 
 from utils.handle_response import ResponseHandler
 
 from cerberus import Validator
 from schemas.assessment_schema import create_assessment_schema, update_assessment_schema
+from schemas.submission_schema import create_submission_schema, update_submission_schema
+
+from datetime import datetime
 
 assessment_bp = Blueprint("assessment", __name__)
 
@@ -59,7 +62,7 @@ def create_assessment():
 
 @assessment_bp.route("/api/v1/assessments", methods=["GET"])
 @jwt_required()
-def get_all_assessments():
+def get_all_assessments_in_module():
     Session = sessionmaker(bind=connect_db())
     s = Session()
     s.begin()
@@ -227,6 +230,94 @@ def update_submission_grade(submission_id):
 
         return ResponseHandler.success(submission.to_dictionaries(), "Submission updated successfully")
         
+    except Exception as e:
+        s.rollback()
+        return ResponseHandler.error(str(e), 500)
+
+    finally:
+        s.close()
+
+
+@assessment_bp.route("/api/v1/assessments/<int:assessment_id>/submissions", methods=["POST"])
+@jwt_required()
+def submit_assessment(assessment_id):
+    Session = sessionmaker(bind=connect_db())
+    s = Session()
+    s.begin()
+
+    try:
+        data = request.get_json()
+        user_id = get_jwt_identity()
+
+        # Validate the input payload
+        validator = Validator(create_submission_schema)
+        data["assessment_id"] = assessment_id
+
+        if not validator.validate(data):
+            return ResponseHandler.error("Validation error", 400, validator.errors)
+
+        # Check if the assessment exists
+        assessment = s.query(AssessmentModel).filter_by(id=assessment_id).first()
+        if not assessment:
+            return ResponseHandler.error("Assessment not found", 404)
+
+        # Check user role for submission eligibility
+        role = s.query(RoleModel).filter_by(
+            id=data["role_id"], user_id=user_id, role=UserRoleEnum.student
+        ).first()
+        if not role:
+            return ResponseHandler.error("Role not found or unauthorized", 403)
+        
+        # Check if the student role is active
+        if role.status != RoleStatusEnum.active: 
+            return ResponseHandler.error("Role is inactive", 403)
+        
+        # Check if the student has already submitted for this assessment
+        existing_submission = s.query(SubmissionModel).filter_by(
+            assessment_id=assessment_id, role_id=role.id
+        ).first()
+        if existing_submission:
+            return ResponseHandler.error("You have already submitted for this assessment", 400)
+        
+        # Check if the deadline has passed
+        assessment_detail = s.query(AssessmentDetailModel).filter_by(assessment_id=assessment_id).first()
+        if assessment_detail and datetime.utcnow() > assessment_detail.deadline:    
+            return ResponseHandler.error("Submission deadline has passed", 400)
+
+        # calculate score for multiple choice assessment
+        if assessment.type == AssesmentTypeEnum.choices:
+            assessment_detail = s.query(AssessmentDetailModel).filter_by(
+                assessment_id=assessment_id
+            ).first()
+
+            if not assessment_detail:
+                return ResponseHandler.error("Assessment detail not found", 404)
+
+            correct_answers = assessment_detail.answer
+            user_answers = data.get("answer", {})
+            correct_answers_count = 0
+            total_questions = len(assessment_detail.question) 
+
+            for question_number, options in assessment_detail.question.items():
+                if user_answers.get(question_number) == correct_answers.get(question_number):
+                    correct_answers_count += 1
+
+            score = (correct_answers_count / total_questions) * 100
+        else:
+            score = None
+
+        submission = SubmissionModel(
+            assessment_id=assessment_id,
+            role_id=role.id,
+            file=data.get("file"),
+            score=score,
+            answer=user_answers
+        )
+        s.add(submission)
+        s.commit()
+
+        return ResponseHandler.success(submission.to_dictionaries(), "Submission created", 201)
+
     except Exception as e:
         s.rollback()
         return ResponseHandler.error(str(e), 500)

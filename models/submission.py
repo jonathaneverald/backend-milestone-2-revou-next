@@ -1,6 +1,6 @@
 from db import db
 from sqlalchemy.orm import mapped_column
-from sqlalchemy import Integer, DateTime, ForeignKey, String
+from sqlalchemy import Integer, DateTime, ForeignKey, String, JSON
 from datetime import datetime, timedelta
 
 
@@ -17,6 +17,9 @@ class SubmissionModel(db.Model):
     score = mapped_column(
         Integer, unique=False, nullable=True
     )  # to store score, automatically generated if the assessment type is multiple choices
+    answer = mapped_column(
+        JSON, unique=False, nullable=True
+    )
     file = mapped_column(String(255), unique=False, nullable=True)
     submitted_at = mapped_column(DateTime, default=gmt_plus_7_now, nullable=False)
     updated_at = mapped_column(DateTime, default=gmt_plus_7_now, onupdate=gmt_plus_7_now, nullable=False)
@@ -30,6 +33,7 @@ class SubmissionModel(db.Model):
             "assessment_id": self.assessment_id,
             "role_id": self.role_id,
             "score": self.score,
+            "answer": self.answer,
             "file": self.file,
             "submitted_at": self.submitted_at,
             "updated_at": self.updated_at,
