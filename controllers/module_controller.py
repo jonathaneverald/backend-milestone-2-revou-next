@@ -11,11 +11,13 @@ from cerberus import Validator
 from schemas.module_schema import create_module_schema, update_module_schema
 from services.upload import UploadFiles
 from werkzeug.datastructures import FileStorage
+from flask_cors import cross_origin
 
 module_bp = Blueprint("module", __name__)
 
 
 @module_bp.route("/api/v1/modules/<int:module_id>/assessments", methods=["GET"])
+@cross_origin(origin="localhost", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def get_module_assessments(module_id):
     Session = sessionmaker(bind=connect_db())
@@ -40,6 +42,7 @@ def get_module_assessments(module_id):
 
 
 @module_bp.route("/api/v1/courses/<int:course_id>/modules", methods=["POST"])
+@cross_origin(origin="localhost", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def create_module(course_id):
     Session = sessionmaker(bind=connect_db())
@@ -99,6 +102,7 @@ def create_module(course_id):
 
 
 @module_bp.route("/api/v1/courses/<int:course_id>/modules", methods=["GET"])
+@cross_origin(origin="localhost", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def get_all_modules(course_id):
     Session = sessionmaker(bind=connect_db())
@@ -136,6 +140,7 @@ def get_all_modules(course_id):
 
 
 @module_bp.route("/api/v1/courses/<int:course_id>/modules/<int:module_id>", methods=["GET"])
+@cross_origin(origin="localhost", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def get_module_by_id(course_id, module_id):
     Session = sessionmaker(bind=connect_db())
@@ -162,6 +167,7 @@ def get_module_by_id(course_id, module_id):
 
 
 @module_bp.route("/api/v1/courses/<int:course_id>/modules/<int:module_id>", methods=["PATCH"])
+@cross_origin(origin="localhost", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def update_module(course_id, module_id):
     Session = sessionmaker(bind=connect_db())
@@ -228,6 +234,7 @@ def update_module(course_id, module_id):
 
 
 @module_bp.route("/api/v1/courses/<int:course_id>/modules/<int:module_id>", methods=["DELETE"])
+@cross_origin(origin="localhost", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def delete_module(course_id, module_id):
     Session = sessionmaker(bind=connect_db())

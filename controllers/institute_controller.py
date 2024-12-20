@@ -10,11 +10,13 @@ from utils.handle_response import ResponseHandler
 
 from cerberus import Validator
 from schemas.institute_schema import create_institute_schema, update_institute_schema
+from flask_cors import cross_origin
 
 institute_bp = Blueprint("institute", __name__)
 
 
 @institute_bp.route("/api/v1/institutes", methods=["POST"])
+@cross_origin(origin="localhost", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def create_institute():
     Session = sessionmaker(bind=connect_db())
@@ -53,6 +55,7 @@ def create_institute():
 
 
 @institute_bp.route("/api/v1/institutes", methods=["GET"])
+@cross_origin(origin="localhost", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def get_all_institutes():
     Session = sessionmaker(bind=connect_db())
@@ -82,6 +85,7 @@ def get_all_institutes():
 
 
 @institute_bp.route("/api/v1/institutes/<int:institute_id>", methods=["GET"])
+@cross_origin(origin="localhost", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def get_institute_by_id(institute_id):
     Session = sessionmaker(bind=connect_db())
@@ -113,6 +117,7 @@ def get_institute_by_id(institute_id):
 
 
 @institute_bp.route("/api/v1/institutes/<int:institute_id>", methods=["PATCH"])
+@cross_origin(origin="localhost", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def update_institute(institute_id):
     Session = sessionmaker(bind=connect_db())
@@ -160,6 +165,7 @@ def update_institute(institute_id):
 
 
 @institute_bp.route("/api/v1/institutes/<int:institute_id>", methods=["DELETE"])
+@cross_origin(origin="localhost", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def delete_institute(institute_id):
     Session = sessionmaker(bind=connect_db())
