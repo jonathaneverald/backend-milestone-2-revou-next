@@ -20,7 +20,6 @@ enrollment_bp = Blueprint("enrollment", __name__)
 
 
 @enrollment_bp.route("/api/v1/institutes/<int:institute_id>/roles", methods=["POST"])
-@cross_origin(origin="*", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def assign_role(institute_id):
     Session = sessionmaker(bind=connect_db())
@@ -84,7 +83,6 @@ def assign_role(institute_id):
 
 
 @enrollment_bp.route("/api/v1/institutes/<int:institute_id>/roles/<int:role_id>", methods=["PATCH"])
-@cross_origin(origin="*", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def update_role_status(institute_id, role_id):
     Session = sessionmaker(bind=connect_db())
@@ -131,7 +129,6 @@ def update_role_status(institute_id, role_id):
 
 
 @enrollment_bp.route("/api/v1/institutes/<int:institute_id>/roles", methods=["GET"])
-@cross_origin(origin="*", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def get_institute_roles(institute_id):
     Session = sessionmaker(bind=connect_db())
@@ -151,7 +148,6 @@ def get_institute_roles(institute_id):
 
 
 @enrollment_bp.route("/api/v1/enrollments", methods=["POST"])
-@cross_origin(origin="*", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def create_enrollment():
     Session = sessionmaker(bind=connect_db())
@@ -195,7 +191,6 @@ def create_enrollment():
 
 
 @enrollment_bp.route("/api/v1/enrollments", methods=["GET"])
-@cross_origin(origin="*", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def get_all_enrollments():
     Session = sessionmaker(bind=connect_db())
@@ -216,7 +211,6 @@ def get_all_enrollments():
 
 
 @enrollment_bp.route("/api/v1/enrollments/<int:enrollment_id>", methods=["GET"])
-@cross_origin(origin="*", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def get_enrollment_by_id(enrollment_id):
     Session = sessionmaker(bind=connect_db())
@@ -237,7 +231,6 @@ def get_enrollment_by_id(enrollment_id):
 
 
 @enrollment_bp.route("/api/v1/enrollments/<int:enrollment_id>", methods=["PATCH"])
-@cross_origin(origin="*", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def update_enrollment(enrollment_id):
     Session = sessionmaker(bind=connect_db())
@@ -279,7 +272,6 @@ def update_enrollment(enrollment_id):
 
 
 @enrollment_bp.route("/api/v1/enrollments/me", methods=["GET"])
-@cross_origin(origin="*", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def get_my_enrollments():
     Session = sessionmaker(bind=connect_db())

@@ -21,7 +21,6 @@ revoked_tokens = set()
 
 
 @auth_bp.route("/api/v1/auth/register", methods=["POST"])
-@cross_origin(origin="*", headers=["Content-Type", "Authorization"])
 def register():
     Session = sessionmaker(bind=connect_db())
     s = Session()
@@ -77,7 +76,6 @@ def register():
 
 
 @auth_bp.route("/api/v1/auth/login", methods=["POST"])
-@cross_origin(origin="*", headers=["Content-Type", "Authorization"])
 def login():
     Session = sessionmaker(bind=connect_db())
     s = Session()
@@ -124,7 +122,6 @@ def login():
 
 
 @auth_bp.route("/api/v1/users/profile", methods=["GET"])
-@cross_origin(origin="*", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def get_profile():
     Session = sessionmaker(bind=connect_db())
@@ -148,7 +145,6 @@ def get_profile():
 
 
 @auth_bp.route("/api/v1/users/profile", methods=["PATCH"])
-@cross_origin(origin="*", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def update_profile():
     Session = sessionmaker(bind=connect_db())
@@ -229,7 +225,6 @@ def update_profile():
 
 
 @auth_bp.route("/api/v1/users/logout", methods=["POST"])
-@cross_origin(origin="*", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def logout():
     try:
