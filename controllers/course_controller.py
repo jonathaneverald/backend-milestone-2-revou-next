@@ -17,7 +17,7 @@ course_bp = Blueprint("course", __name__)
 
 
 @course_bp.route("/api/v1/student-courses/<int:course_id>/modules", methods=["GET"])
-@cross_origin(origin="localhost", headers=["Content-Type", "Authorization"])
+@cross_origin(origin="*", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def get_course_modules(course_id):
     Session = sessionmaker(bind=connect_db())
@@ -64,7 +64,7 @@ def get_course_modules(course_id):
 
 
 @course_bp.route("/api/v1/courses", methods=["POST"])
-@cross_origin(origin="localhost", headers=["Content-Type", "Authorization"])
+@cross_origin(origin="*", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def create_course():
     Session = sessionmaker(bind=connect_db())
@@ -125,7 +125,7 @@ def create_course():
 
 
 @course_bp.route("/api/v1/courses", methods=["GET"])
-@cross_origin(origin="localhost", headers=["Content-Type", "Authorization"])
+@cross_origin(origin="*", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def get_all_courses():
     Session = sessionmaker(bind=connect_db())
@@ -156,7 +156,7 @@ def get_all_courses():
 
 
 @course_bp.route("/api/v1/courses/<int:course_id>", methods=["GET"])
-@cross_origin(origin="localhost", headers=["Content-Type", "Authorization"])
+@cross_origin(origin="*", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def get_course_by_id(course_id):
     Session = sessionmaker(bind=connect_db())
@@ -187,7 +187,7 @@ def get_course_by_id(course_id):
 
 
 @course_bp.route("/api/v1/courses/<int:course_id>", methods=["PATCH"])
-@cross_origin(origin="localhost", headers=["Content-Type", "Authorization"])
+@cross_origin(origin="*", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def update_course(course_id):
     Session = sessionmaker(bind=connect_db())
@@ -258,7 +258,7 @@ def update_course(course_id):
 
 
 @course_bp.route("/api/v1/courses/<int:course_id>", methods=["DELETE"])
-@cross_origin(origin="localhost", headers=["Content-Type", "Authorization"])
+@cross_origin(origin="*", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def delete_course(course_id):
     Session = sessionmaker(bind=connect_db())
@@ -300,7 +300,7 @@ def delete_course(course_id):
 
 
 @course_bp.route("/api/v1/institute-courses/<int:institute_id>", methods=["GET"])
-@cross_origin(origin="localhost", headers=["Content-Type", "Authorization"])
+@cross_origin(origin="*", headers=["Content-Type", "Authorization"])
 @jwt_required()
 def show_all_courses(institute_id):
     Session = sessionmaker(bind=connect_db())

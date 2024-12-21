@@ -45,9 +45,10 @@ def create_app():
 
     CORS(
         app,
-        origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+        # origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+        origins=["*"],
         supports_credentials=True,
-        methods=["*"],
+        methods="*",
         resources={r"/*": {"origins": "*"}},
         allow_headers=["Content-Type", "Authorization", "XCSRF-Token"],
     )
