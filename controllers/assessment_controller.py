@@ -5,13 +5,14 @@ from services.upload import UploadFiles
 from werkzeug.datastructures import FileStorage
 import json
 
-from models import AssessmentModel, RoleModel, SubmissionModel, AssessmentDetailModel
+from models import AssessmentModel, RoleModel, SubmissionModel, AssessmentDetailModel, UserModel
 from connector.mysql_connectors import connect_db
 from sqlalchemy.orm import sessionmaker
 
 from enums.enum import UserRoleEnum, AssesmentTypeEnum, RoleStatusEnum
 
 from utils.handle_response import ResponseHandler
+from utils.validate_submission import validate_submission
 
 from cerberus import Validator
 from schemas.assessment_schema import create_assessment_schema, update_assessment_schema
@@ -184,11 +185,26 @@ def get_submissions(assessment_id):
     s.begin()
 
     try:
-        submission = s.get(SubmissionModel, assessment_id)
-        if not submission:
+        submissions = s.query(SubmissionModel, UserModel.name).\
+            join(UserModel, UserModel.id == SubmissionModel.role_id).\
+            filter(SubmissionModel.assessment_id == assessment_id).all()
+
+        if not submissions:
             return ResponseHandler.error("Submission not found", 404)
 
-        return ResponseHandler.success(submission.to_dictionaries(), "Submission retrieved successfully")
+        submission_list = [{
+            'submission_id': submission.SubmissionModel.id,
+            'role_id': submission.SubmissionModel.role_id,
+            'user_name': submission.name,
+            'file_url': submission.SubmissionModel.file,
+            'score': submission.SubmissionModel.score,
+            'answer': submission.SubmissionModel.answer,
+            'submitted_at': submission.SubmissionModel.submitted_at
+        } for submission in submissions]
+
+        return ResponseHandler.success(
+            {"submissions": submission_list}, "Submissions retrieved successfully"
+        )
 
     except Exception as e:
         return ResponseHandler.error(str(e), 500)
@@ -253,6 +269,33 @@ def submit_assessment(assessment_id):
         user_id = get_jwt_identity()
         data = request.form.to_dict()  # Change to form data to handle file upload
         submission_file = request.files.get('file')
+
+        # Check user role for submission eligibility
+        role = s.query(RoleModel).filter_by(
+            id=data["role_id"], user_id=user_id, role=UserRoleEnum.student
+        ).first()
+        if not role:
+            return ResponseHandler.error("Role not found or unauthorized", 403)
+        if role.status != RoleStatusEnum.active: 
+            return ResponseHandler.error("Role is inactive", 403)
+        
+        # Check if the student has already submitted for this assessment
+        existing_submission = s.query(SubmissionModel).filter_by(
+            assessment_id=assessment_id, role_id=role.id
+        ).first()
+        if existing_submission:
+            return ResponseHandler.error("You have already submitted for this assessment", 400)
+
+        # Check if the assessment exists
+        assessment = s.query(AssessmentModel).filter_by(id=assessment_id).first()
+        if not assessment:
+            return ResponseHandler.error("Assessment not found", 404)
+        
+        assessment_type = assessment.type
+
+        validation_error = validate_submission(data, assessment_type)
+        if validation_error:
+            return validation_error
         
         # Handle file upload if provided
         file_url = None
@@ -265,58 +308,28 @@ def submit_assessment(assessment_id):
             
             file_url = result["file_url"]
 
-        # Check answer if is a valid JSON
-        try:
-            answer = json.loads(data.get("answer", "{}")) if "answer" in data else {}
-        except json.JSONDecodeError:
-            return ResponseHandler.error("Invalid answer format: Must be valid JSON", 400)
-
-        # Validate the input payload
-        validator = Validator(create_submission_schema)
-        data["assessment_id"] = assessment_id
-
-        if not validator.validate(data):
-            return ResponseHandler.error("Validation error", 400, validator.errors)
-
-        # Check if the assessment exists
-        assessment = s.query(AssessmentModel).filter_by(id=assessment_id).first()
-        if not assessment:
-            return ResponseHandler.error("Assessment not found", 404)
-
-        # Check user role for submission eligibility
-        role = s.query(RoleModel).filter_by(
-            id=data["role_id"], user_id=user_id, role=UserRoleEnum.student
-        ).first()
-        if not role:
-            return ResponseHandler.error("Role not found or unauthorized", 403)
-        
-        # Check if the student role is active
-        if role.status != RoleStatusEnum.active: 
-            return ResponseHandler.error("Role is inactive", 403)
-        
-        # Check if the student has already submitted for this assessment
-        existing_submission = s.query(SubmissionModel).filter_by(
-            assessment_id=assessment_id, role_id=role.id
-        ).first()
-        if existing_submission:
-            return ResponseHandler.error("You have already submitted for this assessment", 400)
+        # Parse the `answer` field if provided
+        user_answers = {}
+        if "answer" in data:
+            try:
+                user_answers = data.get("answer")
+            except json.JSONDecodeError:
+                return ResponseHandler.error("Invalid answer format: Must be valid JSON", 400)
         
         # Check if the deadline has passed
-        assessment_detail = s.query(AssessmentDetailModel).filter_by(assessment_id=assessment_id).first()
+        assessment_detail = s.query(AssessmentDetailModel).filter_by(
+            assessment_id=assessment_id
+        ).first()
         if assessment_detail and datetime.utcnow() > assessment_detail.deadline:    
             return ResponseHandler.error("Submission deadline has passed", 400)
 
         # calculate score for multiple choice assessment
-        if assessment.type == AssesmentTypeEnum.choices:
-            assessment_detail = s.query(AssessmentDetailModel).filter_by(
-                assessment_id=assessment_id
-            ).first()
-
+        score = None
+        if assessment_type == AssesmentTypeEnum.choices and user_answers:
             if not assessment_detail:
                 return ResponseHandler.error("Assessment detail not found", 404)
 
             correct_answers = assessment_detail.answer
-            user_answers = answer
             correct_answers_count = 0
             total_questions = len(assessment_detail.question) 
 
@@ -333,8 +346,6 @@ def submit_assessment(assessment_id):
                     correct_answers_count += 1
 
             score = (correct_answers_count / total_questions) * 100
-        else:
-            score = None
 
         submission = SubmissionModel(
             assessment_id=assessment_id,
