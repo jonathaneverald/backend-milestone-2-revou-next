@@ -38,11 +38,5 @@ update_submission_schema = {
         "required": False,
         "nullable": True,
         "min": 0
-    },
-    "file": {
-        "type": "string",
-        "required": False,
-        "nullable": True,
-        "maxlength": 255
     }
 }
