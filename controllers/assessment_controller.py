@@ -185,22 +185,33 @@ def get_submissions(assessment_id):
     s.begin()
 
     try:
-        submissions = s.query(SubmissionModel, UserModel.name).\
-            join(UserModel, UserModel.id == SubmissionModel.role_id).\
-            filter(SubmissionModel.assessment_id == assessment_id).all()
+        submissions = s.query(
+            SubmissionModel, UserModel.name, AssessmentModel.type, AssessmentDetailModel.title, AssessmentDetailModel.question
+        ).join(
+            UserModel, UserModel.id == SubmissionModel.role_id
+        ).join(
+            AssessmentModel, AssessmentModel.id == SubmissionModel.assessment_id
+        ).join(
+            AssessmentDetailModel, AssessmentModel.id == AssessmentDetailModel.assessment_id
+        ).filter(
+            SubmissionModel.assessment_id == assessment_id
+        ).all()
 
         if not submissions:
             return ResponseHandler.error("Submission not found", 404)
 
         submission_list = [{
-            'submission_id': submission.SubmissionModel.id,
-            'role_id': submission.SubmissionModel.role_id,
-            'user_name': submission.name,
-            'file_url': submission.SubmissionModel.file,
-            'score': submission.SubmissionModel.score,
-            'answer': submission.SubmissionModel.answer,
-            'submitted_at': submission.SubmissionModel.submitted_at
-        } for submission in submissions]
+            'submission_id': submission.id,
+            'role_id': submission.role_id,
+            'user_name': user_name,
+            'file_url': submission.file,
+            'score': submission.score,
+            'answer': submission.answer,
+            'submitted_at': submission.submitted_at,
+            'assessment_type': assessment_type.name,
+            'assessment_title': assessment_title,
+            'question': question
+        } for submission, user_name, assessment_type, assessment_title, question in submissions]
 
         return ResponseHandler.success(
             {"submissions": submission_list}, "Submissions retrieved successfully"
@@ -225,7 +236,7 @@ def update_submission_grade(submission_id):
 
         submission = s.get(SubmissionModel, submission_id)
 
-        validator = Validator(update_assessment_schema)
+        validator = Validator(update_submission_schema)
 
         if not validator.validate(data):
             return ResponseHandler.error("Validation error", 400, validator.errors)
@@ -293,7 +304,7 @@ def submit_assessment(assessment_id):
         
         assessment_type = assessment.type
 
-        validation_error = validate_submission(data, assessment_type)
+        validation_error = validate_submission(data, assessment_type, submission_file)
         if validation_error:
             return validation_error
         
