@@ -71,3 +71,27 @@ def get_submission_by_id(submission_id):
 
     finally:
         s.close()
+
+@submission_bp.route("/api/v1/submissions/me/assessment/<int:assessment_id>", methods=["GET"])
+@jwt_required()
+def get_submission_by_assessment_id(asssessment_id):
+    Session = sessionmaker(bind=connect_db())
+    s = Session()
+    s.begin()
+
+    try:
+        # Fetch submissions by id
+        submission = s.get(SubmissionModel, asssessment_id)
+
+        if not submission:
+            return ResponseHandler.success(
+                {"submissions": []}, "No submissions found"
+            )
+        return ResponseHandler.success(submission.to_dictionaries(), "Submission retrieved successfully")
+
+    except Exception as e:
+        s.rollback()
+        return ResponseHandler.error(str(e), 500)
+
+    finally:
+        s.close()
