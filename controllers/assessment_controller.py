@@ -65,15 +65,15 @@ def create_assessment():
     finally:
         s.close()
 
-@assessment_bp.route("/api/v1/assessments", methods=["GET"])
+@assessment_bp.route("/api/v1/assessments/module/<int:module_id>", methods=["GET"])
 @jwt_required()
-def get_all_assessments_in_module():
+def get_all_assessments_in_module(module_id):
     Session = sessionmaker(bind=connect_db())
     s = Session()
     s.begin()
 
     try:
-        assessments = s.query(AssessmentModel).filter(AssessmentModel.module_id).all()
+        assessments = s.query(AssessmentModel).filter(AssessmentModel.module_id == module_id).all()
         return ResponseHandler.success(
             {"assessments": [assessment.to_dictionaries() for assessment in assessments]},
             "Assessments retrieved successfully"
