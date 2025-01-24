@@ -39,7 +39,7 @@ def create_assessment_details(assessment_id):
         if not validator.validate(data):
             return ResponseHandler.error("Validation error", 400, validator.errors)
 
-        assessment = s.query(AssessmentModel).filter_by(assessment_id=assessment_id).first()
+        assessment = s.query(AssessmentModel).filter_by(id=assessment_id).first()
 
         if not assessment:
             return ResponseHandler.error("Assessment not found", 404)
