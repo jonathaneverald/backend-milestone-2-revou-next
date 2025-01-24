@@ -33,12 +33,6 @@ def create_assessment():
         data = request.get_json()
         user_id = get_jwt_identity()
 
-        if 'deadline' in data:
-            try:
-                data['deadline'] = datetime.fromisoformat(data['deadline'])
-            except ValueError:
-                return ResponseHandler.error("Invalid deadline format. Must be ISO 8601 (e.g., 2023-12-31T23:59:59)", 400)
-
         validator = Validator(create_assessment_schema)
 
         if not validator.validate(data):

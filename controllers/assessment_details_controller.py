@@ -12,6 +12,8 @@ from utils.handle_response import ResponseHandler
 from cerberus import Validator
 from schemas.assessment_details_schema import create_assessment_details_schema, update_assessment_details_schema
 
+from datetime import datetime
+
 assessment_details_bp = Blueprint("assessment_details", __name__)
 
 @assessment_details_bp.route("/api/v1/assessments_details/<int:assessment_id>", methods=["POST"])
@@ -25,6 +27,13 @@ def create_assessment_details(assessment_id):
         data = request.get_json()
         user_id = get_jwt_identity()
 
+        
+        if 'deadline' in data:
+            try:
+                data['deadline'] = datetime.fromisoformat(data['deadline'])
+            except ValueError:
+                return ResponseHandler.error("Invalid deadline format. Must be ISO 8601 (e.g., 2023-12-31T23:59:59)", 400)
+        
         validator = Validator(create_assessment_details_schema)
 
         if not validator.validate(data):
@@ -56,7 +65,7 @@ def create_assessment_details(assessment_id):
             title=data['title'],
             question=data['question'],
             answer=data['answer'] if 'answer' in data else None,
-            deadline=datetime.fromisoformat(data["deadline"])
+            deadline=data['deadline']
         )
 
         s.add(assessment_detail)
