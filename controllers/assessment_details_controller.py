@@ -84,6 +84,7 @@ def get_assessment_details_by_asssesment_id(assessment_id):
         if not assessment_details:
             return ResponseHandler.error("Create the assesment details first!", 404)
         
+        # Check if the user is an instructor and has access to this assessment details
         instructor_role = s.query(RoleModel).filter(
             RoleModel.user_id == user_id,
             RoleModel.role == UserRoleEnum.instructor
@@ -117,10 +118,9 @@ def update_assessment_details_by_assessment(assessment_id):
         if not validator.validate(data):
             return ResponseHandler.error("Validation error", 400, validator.errors)
 
-        assessment_detail = s.get(AssessmentModel, assessment_id)
-
-        if not assessment_detail:
-            return ResponseHandler.error("Assessment not found", 404)
+        assessment_details = s.query(AssessmentDetailModel).filter_by(assessment_id=assessment_id).first()
+        if not assessment_details:
+            return ResponseHandler.error("Assestment details not found", 404)
         
         # Check if user is instructor
         instructor_role = s.query(RoleModel).filter(
@@ -131,15 +131,15 @@ def update_assessment_details_by_assessment(assessment_id):
         if not instructor_role:
             return ResponseHandler.error("Unauthorized user", 403)
         
-        if not assessment_detail:
+        if not assessment_details:
             return ResponseHandler.error('Assessment detail not found', 404 )
 
         for key, value in data.items():
-            setattr(assessment_detail, key, value)
+            setattr(assessment_details, key, value)
 
         s.commit()
 
-        return ResponseHandler.success(assessment_detail.to_dictionaries(), "Assessment updated successfully")
+        return ResponseHandler.success(assessment_details.to_dictionaries(), "Assessment updated successfully")
         
     except Exception as e:
         s.rollback()
