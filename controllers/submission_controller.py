@@ -74,20 +74,37 @@ def get_submission_by_id(submission_id):
 
 @submission_bp.route("/api/v1/submissions/me/assessment/<int:assessment_id>", methods=["GET"])
 @jwt_required()
-def get_submission_by_assessment_id(asssessment_id):
+def get_my_submission_by_assessment_id(assessment_id):  # Fixed parameter name
     Session = sessionmaker(bind=connect_db())
     s = Session()
     s.begin()
 
     try:
-        # Fetch submissions by id
-        submission = s.get(SubmissionModel, asssessment_id)
+        user_id = get_jwt_identity()
+
+        # Fetch roles associated with the current user
+        roles = s.query(RoleModel).filter(
+            RoleModel.user_id == user_id,
+            RoleModel.role == UserRoleEnum.student,
+            RoleModel.status == RoleStatusEnum.active
+        ).all()  # Fixed unclosed parenthesis
+
+        # Fetch submission by id
+        submission = s.query(SubmissionModel).filter(
+            SubmissionModel.role_id.in_([role.id for role in roles]),
+            SubmissionModel.assessment_id == assessment_id
+        ).first()  # Fixed incorrect parentheses and `_in_`
 
         if not submission:
             return ResponseHandler.success(
                 {"submissions": []}, "No submissions found"
             )
-        return ResponseHandler.success(submission.to_dictionaries(), "Submission retrieved successfully")
+
+        # Use `.to_dictionaries()` or equivalent method to format submission data
+        return ResponseHandler.success(
+            {"submissions": [submission.to_dictionaries()]},
+            "Submission retrieved successfully"
+        )
 
     except Exception as e:
         s.rollback()
