@@ -92,16 +92,6 @@ def get_assessment_details_by_asssesment_id(assessment_id):
         assessment_details = s.query(AssessmentDetailModel).filter_by(assessment_id=assessment_id).first()
         if not assessment_details:
             return ResponseHandler.error("Create the assesment details first!", 404)
-        
-        # Check if the user is an instructor and has access to this assessment details
-        instructor_role = s.query(RoleModel).filter(
-            RoleModel.user_id == user_id,
-            RoleModel.role == UserRoleEnum.instructor
-        ).first()
-
-        if not instructor_role:
-            return ResponseHandler.error("Unauthorized user", 403)
-
 
         return ResponseHandler.success(assessment_details.to_dictionaries(), "Assessment retrieved successfully")
 
