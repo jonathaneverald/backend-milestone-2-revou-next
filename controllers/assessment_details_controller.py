@@ -56,7 +56,7 @@ def create_assessment_details(assessment_id):
             title=data['title'],
             question=data['question'],
             answer=data['answer'] if 'answer' in data else None,
-            deadline=data['deadline'],
+            deadline=datetime.fromisoformat(data["deadline"])
         )
 
         s.add(assessment_detail)
