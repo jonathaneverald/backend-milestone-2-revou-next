@@ -229,6 +229,32 @@ def get_enrollment_by_id(enrollment_id):
     finally:
         s.close()
 
+@enrollment_bp.route("/api/v1/enrollments/<int:enrollment_id>", methods=["GET"])
+@jwt_required()
+def get_user_role_on_institute(institute_id):
+    Session = sessionmaker(bind=connect_db())
+    s = Session()
+    s.begin()
+
+    try:
+        user_id = get_jwt_identity()
+
+        role = (
+            s.query(RoleModel)
+            .filter(RoleModel.user_id == user_id, RoleModel.institute_id == institute_id)
+            .first()
+        )
+
+        if not role:
+            return ResponseHandler.error("Role not found", 404)
+
+        return ResponseHandler.success(role.to_dictionaries(), "Role retrieved successfully")
+    except Exception as e:
+        return ResponseHandler.error(str(e), 500)
+
+    finally:
+        s.close()
+
 
 @enrollment_bp.route("/api/v1/enrollments/<int:enrollment_id>", methods=["PATCH"])
 @jwt_required()
