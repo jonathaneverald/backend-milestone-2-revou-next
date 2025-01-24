@@ -12,7 +12,7 @@ from utils.handle_response import ResponseHandler
 from cerberus import Validator
 from schemas.assessment_details_schema import create_assessment_details_schema, update_assessment_details_schema
 
-assessment_details_bp = Blueprint("assessment", __name__)
+assessment_details_bp = Blueprint("assessment_details", __name__)
 
 @assessment_details_bp.route("/api/v1/assessments_details/<int:assessment_id>", methods=["POST"])
 @jwt_required()
