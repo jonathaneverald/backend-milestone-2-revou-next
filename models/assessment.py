@@ -8,7 +8,6 @@ from enums.enum import AssesmentTypeEnum
 def gmt_plus_7_now():
     return datetime.utcnow() + timedelta(hours=7)
 
-
 class AssessmentModel(db.Model):
     __tablename__ = "assessments"
 

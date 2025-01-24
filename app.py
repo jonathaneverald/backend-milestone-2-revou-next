@@ -1,25 +1,13 @@
 from flask import Flask
 from flask_migrate import Migrate
-from flask_login import LoginManager
 from flask_jwt_extended import JWTManager
 from config.config import Config
-from sqlalchemy.orm import sessionmaker
 from flask_cors import CORS
 from datetime import timedelta
 import os
 
 from db import db
 from connector.mysql_connectors import connect_db
-from models.user import UserModel
-from models.disabled_user import DisabledUserModel
-from models.institute import InstituteModel
-from models.role import RoleModel
-from models.course import CourseModel
-from models.module import ModuleModel
-from models.assessment import AssessmentModel
-from models.assessment_detail import AssessmentDetailModel
-from models.enrollment import EnrollmentModel
-from models.submission import SubmissionModel
 
 from controllers.auth_controller import auth_bp, revoked_tokens
 from controllers.institute_controller import institute_bp
@@ -28,6 +16,7 @@ from controllers.course_controller import course_bp
 from controllers.module_controller import module_bp
 from controllers.submission_controller import submission_bp
 from controllers.assessment_controller import assessment_bp
+from controllers.assessment_details_controller import assessment_details_bp
 from dotenv import load_dotenv
 
 
@@ -79,6 +68,7 @@ def register_blueprints(app):
     app.register_blueprint(module_bp)
     app.register_blueprint(submission_bp)
     app.register_blueprint(assessment_bp)
+    app.register_blueprint(assessment_details_bp)
 
 
 if __name__ == "__main__":
